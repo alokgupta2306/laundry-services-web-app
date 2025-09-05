@@ -1,6 +1,7 @@
 // Initialize EmailJS
 (function() {
-    emailjs.init("YOUR_PUBLIC_KEY"); // Replace with your EmailJS public key
+    // Replace with your EmailJS public key when you set it up
+    // emailjs.init("YOUR_PUBLIC_KEY"); 
 })();
 
 // Shopping cart functionality
@@ -21,7 +22,7 @@ function scrollToBooking() {
     });
 }
 
-// Add service to cart
+// Add service to cart - Fixed to only show/hide buttons correctly
 function addService(serviceId, serviceName, price) {
     const existingItem = cart.find(item => item.id === serviceId);
     
@@ -38,6 +39,14 @@ function addService(serviceId, serviceName, price) {
         });
     }
     
+    // Hide Add button and show Remove button
+    const serviceItem = document.querySelector(`[data-service="${serviceId}"]`);
+    const addBtn = serviceItem.querySelector('.add-btn');
+    const removeBtn = serviceItem.querySelector('.remove-btn');
+    
+    addBtn.style.display = 'none';
+    removeBtn.style.display = 'inline-block';
+    
     updateCartDisplay();
     updateTotalAmount();
     
@@ -47,19 +56,26 @@ function addService(serviceId, serviceName, price) {
     setTimeout(() => {
         addButton.style.transform = 'scale(1)';
     }, 150);
+    
+    // Show notification
+    showCartNotification(`Added ${serviceName} to cart!`);
 }
 
-// Remove service from cart
+// Remove service from cart - Fixed to handle complete removal
 function removeService(serviceId) {
     const itemIndex = cart.findIndex(item => item.id === serviceId);
     
     if (itemIndex !== -1) {
-        if (cart[itemIndex].quantity > 1) {
-            cart[itemIndex].quantity -= 1;
-            cart[itemIndex].total = cart[itemIndex].quantity * cart[itemIndex].price;
-        } else {
-            cart.splice(itemIndex, 1);
-        }
+        // Always remove the entire item (not just decrease quantity)
+        cart.splice(itemIndex, 1);
+        
+        // Hide Remove button and show Add button
+        const serviceItem = document.querySelector(`[data-service="${serviceId}"]`);
+        const addBtn = serviceItem.querySelector('.add-btn');
+        const removeBtn = serviceItem.querySelector('.remove-btn');
+        
+        removeBtn.style.display = 'none';
+        addBtn.style.display = 'inline-block';
     }
     
     updateCartDisplay();
@@ -112,48 +128,23 @@ bookingForm.addEventListener('submit', function(e) {
         return;
     }
     
-    // Prepare email data
-    const orderDetails = cart.map(item => 
-        `${item.name} - Quantity: ${item.quantity} - Total: ₹${item.total}`
-    ).join('\n');
-    
-    const emailData = {
-        to_name: 'FreshClean Team',
-        from_name: fullName,
-        from_email: email,
-        phone: phone,
-        order_details: orderDetails,
-        total_amount: totalAmount,
-        message: `New booking from ${fullName}\n\nContact Details:\nEmail: ${email}\nPhone: ${phone}\n\nOrder Details:\n${orderDetails}\n\nTotal Amount: ₹${totalAmount}`
-    };
-    
     // Show loading state
     const submitButton = bookingForm.querySelector('.book-btn');
     const originalText = submitButton.innerHTML;
     submitButton.classList.add('loading');
     submitButton.disabled = true;
     
-    // Send email using EmailJS
-    emailjs.send('YOUR_SERVICE_ID', 'YOUR_TEMPLATE_ID', emailData)
-        .then(function(response) {
-            console.log('Email sent successfully:', response);
-            showConfirmationMessage();
-            clearCart();
-            bookingForm.reset();
-        })
-        .catch(function(error) {
-            console.error('Email sending failed:', error);
-            // Show confirmation message anyway for demo purposes
-            showConfirmationMessage();
-            clearCart();
-            bookingForm.reset();
-        })
-        .finally(function() {
-            // Remove loading state
-            submitButton.classList.remove('loading');
-            submitButton.disabled = false;
-            submitButton.innerHTML = originalText;
-        });
+    // Simulate booking process (replace with actual EmailJS code when configured)
+    setTimeout(() => {
+        showConfirmationMessage();
+        clearCart();
+        bookingForm.reset();
+        
+        // Remove loading state
+        submitButton.classList.remove('loading');
+        submitButton.disabled = false;
+        submitButton.innerHTML = originalText;
+    }, 2000);
 });
 
 // Handle contact form submission
@@ -197,11 +188,54 @@ function showConfirmationMessage() {
     }, 5000);
 }
 
-// Clear cart
+// Clear cart and reset all buttons to default state
 function clearCart() {
     cart = [];
     updateCartDisplay();
     updateTotalAmount();
+    
+    // Reset all service buttons to show Add button only
+    const allServiceItems = document.querySelectorAll('.service-item');
+    allServiceItems.forEach(item => {
+        const addBtn = item.querySelector('.add-btn');
+        const removeBtn = item.querySelector('.remove-btn');
+        
+        addBtn.style.display = 'inline-block';
+        removeBtn.style.display = 'none';
+    });
+}
+
+// Show cart notification
+function showCartNotification(message) {
+    const notification = document.createElement('div');
+    notification.className = 'cart-notification';
+    notification.textContent = message;
+    notification.style.cssText = `
+        position: fixed;
+        top: 100px;
+        right: 20px;
+        background: var(--primary-color);
+        color: white;
+        padding: 1rem 1.5rem;
+        border-radius: 10px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        z-index: 1001;
+        transform: translateX(100%);
+        transition: transform 0.3s ease;
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.style.transform = 'translateX(0)';
+    }, 100);
+    
+    setTimeout(() => {
+        notification.style.transform = 'translateX(100%)';
+        setTimeout(() => {
+            notification.remove();
+        }, 300);
+    }, 3000);
 }
 
 // Handle newsletter subscription
@@ -378,127 +412,6 @@ if (contactPhoneInput) {
     });
 }
 
-// Preload images and optimize performance
-function preloadImages() {
-    const imageUrls = [
-        'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTU2BqpLGZEkZMNKMHmKY-jb1_s10BkWHMLmg&s'
-    ];
-    
-    imageUrls.forEach(url => {
-        const img = new Image();
-        img.src = url;
-    });
-}
-
-// Initialize app
-document.addEventListener('DOMContentLoaded', function() {
-    preloadImages();
-    updateCartDisplay();
-    updateTotalAmount();
-    
-    // Add welcome message
-    console.log('🧺 FreshClean Laundry Services loaded successfully!');
-    console.log('📧 Don\'t forget to configure EmailJS with your credentials');
-});
-
-// Error handling
-window.addEventListener('error', function(e) {
-    console.error('An error occurred:', e.error);
-});
-
-// Service worker registration (for PWA capabilities)
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', function() {
-        // Uncomment when you create a service worker
-        // navigator.serviceWorker.register('/sw.js')
-        //     .then(function(registration) {
-        //         console.log('ServiceWorker registration successful');
-        //     })
-        //     .catch(function(err) {
-        //         console.log('ServiceWorker registration failed');
-        //     });
-    });
-}
-
-// Analytics and tracking (placeholder)
-function trackEvent(category, action, label) {
-    // Add your analytics tracking code here
-    console.log(`Event tracked: ${category} - ${action} - ${label}`);
-}
-
-// Track button clicks
-document.addEventListener('click', function(e) {
-    if (e.target.classList.contains('add-btn')) {
-        trackEvent('Cart', 'Add Item', e.target.closest('.service-item').querySelector('h3').textContent);
-    } else if (e.target.classList.contains('remove-btn')) {
-        trackEvent('Cart', 'Remove Item', e.target.closest('.service-item').querySelector('h3').textContent);
-    } else if (e.target.classList.contains('book-btn')) {
-        trackEvent('Booking', 'Submit Form', 'Book Now');
-    } else if (e.target.classList.contains('subscribe-btn')) {
-        trackEvent('Newsletter', 'Subscribe', 'Newsletter Signup');
-    } else if (e.target.classList.contains('submit-btn')) {
-        trackEvent('Contact', 'Submit Form', 'Contact Us');
-    }
-});
-
-// Keyboard navigation support
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Enter' && e.target.classList.contains('cta-button')) {
-        scrollToBooking();
-    }
-});
-
-// Touch gesture support for mobile
-let startY = 0;
-let endY = 0;
-
-document.addEventListener('touchstart', function(e) {
-    startY = e.touches[0].clientY;
-});
-
-document.addEventListener('touchend', function(e) {
-    endY = e.changedTouches[0].clientY;
-    handleSwipe();
-});
-
-function handleSwipe() {
-    const swipeThreshold = 50;
-    const diff = startY - endY;
-    
-    if (Math.abs(diff) > swipeThreshold) {
-        if (diff > 0) {
-            // Swipe up - scroll to next section
-            const currentSection = getCurrentSection();
-            const nextSection = getNextSection(currentSection);
-            if (nextSection) {
-                const offsetTop = nextSection.offsetTop - 80;
-                window.scrollTo({
-                    top: offsetTop,
-                    behavior: 'smooth'
-                });
-            }
-        }
-    }
-}
-
-function getCurrentSection() {
-    const sections = document.querySelectorAll('section');
-    for (let section of sections) {
-        const rect = section.getBoundingClientRect();
-        if (rect.top <= 100 && rect.bottom >= 100) {
-            return section;
-        }
-    }
-    return null;
-}
-
-function getNextSection(currentSection) {
-    if (!currentSection) return null;
-    const sections = Array.from(document.querySelectorAll('section'));
-    const currentIndex = sections.indexOf(currentSection);
-    return sections[currentIndex + 1] || null;
-}
-
 // Performance optimization
 function debounce(func, wait) {
     let timeout;
@@ -514,7 +427,7 @@ function debounce(func, wait) {
 
 // Debounced scroll handler
 const debouncedScrollHandler = debounce(function() {
-    // Add any scroll-based functionality here
+    updateActiveNavLink();
 }, 100);
 
 window.addEventListener('scroll', debouncedScrollHandler);
@@ -543,12 +456,9 @@ function updateActiveNavLink() {
     });
 }
 
-// Add scroll event listener for active nav links
-window.addEventListener('scroll', debounce(updateActiveNavLink, 50));
-
 // Click outside to close mobile menu
 document.addEventListener('click', function(e) {
-    if (!e.target.closest('.nav-container') && navMenu.classList.contains('active')) {
+    if (!e.target.closest('.nav-container') && navMenu && navMenu.classList.contains('active')) {
         navMenu.classList.remove('active');
         hamburger.classList.remove('active');
     }
@@ -556,118 +466,11 @@ document.addEventListener('click', function(e) {
 
 // Escape key to close mobile menu
 document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape' && navMenu.classList.contains('active')) {
+    if (e.key === 'Escape' && navMenu && navMenu.classList.contains('active')) {
         navMenu.classList.remove('active');
         hamburger.classList.remove('active');
     }
 });
-
-// Lazy loading for images
-function lazyLoadImages() {
-    const images = document.querySelectorAll('img[data-src]');
-    const imageObserver = new IntersectionObserver((entries, observer) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                const img = entry.target;
-                img.src = img.dataset.src;
-                img.classList.remove('lazy');
-                imageObserver.unobserve(img);
-            }
-        });
-    });
-
-    images.forEach(img => imageObserver.observe(img));
-}
-
-// Initialize lazy loading
-document.addEventListener('DOMContentLoaded', lazyLoadImages);
-
-// Smooth reveal animations for elements
-function revealElements() {
-    const elements = document.querySelectorAll('.reveal');
-    
-    elements.forEach(element => {
-        const elementTop = element.getBoundingClientRect().top;
-        const elementVisible = 150;
-        
-        if (elementTop < window.innerHeight - elementVisible) {
-            element.classList.add('revealed');
-        }
-    });
-}
-
-window.addEventListener('scroll', debounce(revealElements, 50));
-
-// Auto-hide navbar on scroll down, show on scroll up
-let lastScrollTop = 0;
-const navbar = document.querySelector('.navbar');
-
-window.addEventListener('scroll', function() {
-    let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-    
-    if (scrollTop > lastScrollTop && scrollTop > 100) {
-        // Scrolling down
-        navbar.style.transform = 'translateY(-100%)';
-    } else {
-        // Scrolling up
-        navbar.style.transform = 'translateY(0)';
-    }
-    
-    lastScrollTop = scrollTop;
-}, false);
-
-// Add loading states to all forms
-function addLoadingState(form, button) {
-    const originalText = button.innerHTML;
-    button.classList.add('loading');
-    button.disabled = true;
-    
-    return function removeLoadingState() {
-        button.classList.remove('loading');
-        button.disabled = false;
-        button.innerHTML = originalText;
-    };
-}
-
-// Enhanced cart functionality
-function showCartNotification(message) {
-    const notification = document.createElement('div');
-    notification.className = 'cart-notification';
-    notification.textContent = message;
-    notification.style.cssText = `
-        position: fixed;
-        top: 100px;
-        right: 20px;
-        background: var(--primary-color);
-        color: white;
-        padding: 1rem 1.5rem;
-        border-radius: 10px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-        z-index: 1001;
-        transform: translateX(100%);
-        transition: transform 0.3s ease;
-    `;
-    
-    document.body.appendChild(notification);
-    
-    setTimeout(() => {
-        notification.style.transform = 'translateX(0)';
-    }, 100);
-    
-    setTimeout(() => {
-        notification.style.transform = 'translateX(100%)';
-        setTimeout(() => {
-            notification.remove();
-        }, 300);
-    }, 3000);
-}
-
-// Update the original addService function to show notifications
-const originalAddService = window.addService;
-window.addService = function(serviceId, serviceName, price) {
-    originalAddService.call(this, serviceId, serviceName, price);
-    showCartNotification(`Added ${serviceName} to cart!`);
-};
 
 // Back to top button
 function createBackToTopButton() {
@@ -676,8 +479,8 @@ function createBackToTopButton() {
     backToTop.className = 'back-to-top';
     backToTop.style.cssText = `
         position: fixed;
-        bottom: 30px;
-        right: 30px;
+        bottom: 20px;
+        right: 20px;
         width: 50px;
         height: 50px;
         background: var(--primary-color);
@@ -685,86 +488,31 @@ function createBackToTopButton() {
         border: none;
         border-radius: 50%;
         cursor: pointer;
+        display: none;
+        align-items: center;
+        justify-content: center;
         font-size: 1.2rem;
-        opacity: 0;
-        visibility: hidden;
-        transition: all 0.3s ease;
         z-index: 1000;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        transition: all 0.3s ease;
     `;
     
     backToTop.addEventListener('click', () => {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
     });
     
     document.body.appendChild(backToTop);
     
     window.addEventListener('scroll', () => {
         if (window.scrollY > 300) {
-            backToTop.style.opacity = '1';
-            backToTop.style.visibility = 'visible';
+            backToTop.style.display = 'flex';
         } else {
-            backToTop.style.opacity = '0';
-            backToTop.style.visibility = 'hidden';
+            backToTop.style.display = 'none';
         }
     });
 }
 
 // Initialize back to top button
 document.addEventListener('DOMContentLoaded', createBackToTopButton);
-
-// Enhanced form validation with better UX
-function validateForm(formId) {
-    const form = document.getElementById(formId);
-    if (!form) return false;
-    
-    const inputs = form.querySelectorAll('input[required], textarea[required]');
-    let isValid = true;
-    
-    inputs.forEach(input => {
-        const value = input.value.trim();
-        const type = input.type;
-        
-        // Remove previous error styling
-        input.classList.remove('error');
-        
-        // Check if empty
-        if (!value) {
-            input.classList.add('error');
-            isValid = false;
-            return;
-        }
-        
-        // Validate email
-        if (type === 'email' && !validateEmail(value)) {
-            input.classList.add('error');
-            isValid = false;
-        }
-        
-        // Validate phone
-        if (type === 'tel' && !validatePhone(value)) {
-            input.classList.add('error');
-            isValid = false;
-        }
-    });
-    
-    return isValid;
-}
-
-// Add error styles to CSS dynamically
-const errorStyles = `
-    .error {
-        border-color: #ff6b6b !important;
-        background-color: rgba(255, 107, 107, 0.1) !important;
-    }
-    
-    .error:focus {
-        box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.2) !important;
-    }
-`;
-
-const styleSheet = document.createElement('style');
-styleSheet.textContent = errorStyles;
-document.head.appendChild(styleSheet);
-
-console.log('✅ FreshClean JavaScript fully loaded and optimized!');
