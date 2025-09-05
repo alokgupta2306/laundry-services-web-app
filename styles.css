@@ -52,6 +52,8 @@ html {
 .nav-logo {
     display: flex;
     align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
     color: var(--text-light);
     font-size: 1.5rem;
     font-weight: bold;
@@ -348,6 +350,7 @@ html {
     cursor: pointer;
     font-weight: 500;
     transition: all 0.3s ease;
+    min-width: 100px;
 }
 
 .add-btn {
