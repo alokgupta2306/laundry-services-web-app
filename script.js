@@ -114,7 +114,6 @@ bookingForm?.addEventListener('submit', async function(e) {
     const cartDetails = cart.map(item => `${item.name}: $${item.price.toFixed(2)}`).join('\n');
     
     const emailData = {
-        to_email: email, // This will be sent to the user
         customer_name: fullName,
         customer_email: email,
         customer_phone: phone,
